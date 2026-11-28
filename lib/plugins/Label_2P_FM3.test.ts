@@ -99,6 +99,71 @@ describe('Label 2P Preamble FM3', () => {
 
     expect(decodeResult.decoded).toBe(true);
     expect(decodeResult.raw.position).toBeUndefined();
+    expect(
+      decodeResult.formatted.items.some((i) => i.label === 'Aircraft Position'),
+    ).toBe(false);
+  });
+
+  test('hemisphere latitude with empty longitude', () => {
+    message.text = 'FM3 133818,1607,N 45.206,,34030, 440,98';
+    const decodeResult = plugin.decode(message);
+
+    expect(decodeResult.decoded).toBe(true);
+    expect(decodeResult.decoder.decodeLevel).toBe('partial');
+    expect(decodeResult.raw.position).toBeUndefined();
+    expect(
+      decodeResult.formatted.items.some((i) => i.label === 'Aircraft Position'),
+    ).toBe(false);
+    expect(decodeResult.formatted.items.length).toBe(3);
+    expect(decodeResult.formatted.items[2].label).toBe('Altitude');
+    expect(decodeResult.formatted.items[2].value).toBe('34030 feet');
+  });
+
+  test('hemisphere latitude with whitespace-only longitude', () => {
+    message.text = 'FM3 133818,1607,N 45.206,\t,34030, 440,98';
+    const decodeResult = plugin.decode(message);
+
+    expect(decodeResult.decoded).toBe(true);
+    expect(decodeResult.raw.position).toBeUndefined();
+    expect(
+      decodeResult.formatted.items.some((i) => i.label === 'Aircraft Position'),
+    ).toBe(false);
+    expect(decodeResult.formatted.items[2].label).toBe('Altitude');
+    expect(decodeResult.formatted.items[2].value).toBe('34030 feet');
+  });
+
+  test('hemisphere letters without digits', () => {
+    message.text = 'FM3 133818,1607,N,E,34030, 440,98';
+    const decodeResult = plugin.decode(message);
+
+    expect(decodeResult.decoded).toBe(true);
+    expect(decodeResult.raw.position).toBeUndefined();
+    expect(
+      decodeResult.formatted.items.some((i) => i.label === 'Aircraft Position'),
+    ).toBe(false);
+    expect(decodeResult.formatted.items[2].label).toBe('Altitude');
+    expect(decodeResult.formatted.items[2].value).toBe('34030 feet');
+  });
+
+  test('hemisphere letter without digits on longitude only', () => {
+    message.text = 'FM3 133818,1607,N 45.206,E,34030, 440,98';
+    const decodeResult = plugin.decode(message);
+
+    expect(decodeResult.decoded).toBe(true);
+    expect(decodeResult.raw.position).toBeUndefined();
+    expect(
+      decodeResult.formatted.items.some((i) => i.label === 'Aircraft Position'),
+    ).toBe(false);
+  });
+
+  test('hemisphere position at 0, 0', () => {
+    message.text = 'FM3 133818,1607,N0,E0,34030, 440,98';
+    const decodeResult = plugin.decode(message);
+
+    expect(decodeResult.decoded).toBe(true);
+    expect(decodeResult.raw.position).toEqual({ latitude: 0, longitude: 0 });
+    expect(decodeResult.formatted.items[2].label).toBe('Aircraft Position');
+    expect(decodeResult.formatted.items[2].value).toBe('0.000 N, 0.000 E');
   });
 
   test('<invalid>', () => {

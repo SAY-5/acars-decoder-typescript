@@ -55,12 +55,16 @@ export class Label_2P_FM3 extends DecoderPlugin {
       const lat = parts[2].replace(/\s/g, '');
       const lon = parts[3].replace(/\s/g, '');
       if (lat[0] === 'N' || lat[0] === 'S') {
-        ResultFormatter.position(decodeResult, {
-          latitude:
-            CoordinateUtils.getDirection(lat[0]) * Number(lat.substring(1)),
-          longitude:
-            CoordinateUtils.getDirection(lon[0]) * Number(lon.substring(1)),
-        });
+        // A hemisphere letter with no digits after it is an empty field, not 0
+        // (`Number('')` is 0), and `lon[0]` of a blank longitude is undefined.
+        if (lat.length > 1 && lon.length > 1) {
+          ResultFormatter.position(decodeResult, {
+            latitude:
+              CoordinateUtils.getDirection(lat[0]) * Number(lat.substring(1)),
+            longitude:
+              CoordinateUtils.getDirection(lon[0]) * Number(lon.substring(1)),
+          });
+        }
       } else if (lat && lon) {
         ResultFormatter.position(decodeResult, {
           latitude: Number(lat),
